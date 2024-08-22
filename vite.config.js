@@ -1,5 +1,5 @@
 import {defineConfig} from "vite";
-import solid from "vite-plugin-solid";
+import react from "@vitejs/plugin-react";
 import {nodePolyfills} from "vite-plugin-node-polyfills";
 import EnvironmentPlugin from "vite-plugin-environment";
 import daisyui from "daisyui";
@@ -12,8 +12,8 @@ export default defineConfig({
     extend: {},
   },
   plugins: [
-    solid(),
     nodePolyfills(),
+    react(),
     EnvironmentPlugin("all"),
     daisyui,
   ],
