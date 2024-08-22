@@ -1,13 +1,14 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
-import EnvironmentPlugin from "vite-plugin-environment"
-import {nodePolyfills} from "vite-plugin-node-polyfills"
+import {defineConfig} from "vite";
+import solid from "vite-plugin-solid";
+import {nodePolyfills} from "vite-plugin-node-polyfills";
+import EnvironmentPlugin from "vite-plugin-environment";
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    nodePolyfills(),
-    react(),
-    EnvironmentPlugin('all'),
-  ]
+  plugins: [solid(), nodePolyfills(), EnvironmentPlugin("all")],
+  server: {
+    port: 3010,
+  },
+  build: {
+    target: "esnext",
+  },
 })
