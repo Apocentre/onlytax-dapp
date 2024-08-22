@@ -1,13 +1,13 @@
 {
-  "name": "my-vue-app",
+  "name": "onlytax-dapp",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "0.1.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:css": "npx tailwindcss -i ./src/index.css -o style/output.css"
   },
   "dependencies": {
     "react": "^18.3.1",
