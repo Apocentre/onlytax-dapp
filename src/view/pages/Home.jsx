@@ -1,24 +1,25 @@
 import { useState } from "react"
-import reactLogo from "../../assets/react.svg"
-import viteLogo from "/vite.svg"
 import "./Home.css"
 
 function Home() {
   const [count, setCount] = useState(0)
 
   return (
-    <div>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div className="sm:h-3/6">
+      <div className="flex flex-col gap-4 card h-50">
+        <div>
+          <h1>Collect Fees</h1>
+        </div>        
+        <div>
+          <input
+            type="text"
+            placeholder="Enter token address"
+            className="input input-bordered input-warning md:w-2/6 w-5/6" />
+          </div>
+          <div>
+            <button className="btn btn-active btn-primary md:w-2/6 w-5/6 text-base-100">Collect</button>
+          </div>
+        </div>
     </div>
   )
 }
