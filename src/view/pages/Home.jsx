@@ -13,7 +13,7 @@ function Home() {
           <input
             type="text"
             placeholder="Enter token address"
-            className="input input-bordered input-warning md:w-2/6 w-5/6" />
+            className="input input-bordered md:w-2/6 w-5/6" />
           </div>
           <div>
           <button className="btn btn-primary md:w-2/6 w-5/6 text-secondary-content">
