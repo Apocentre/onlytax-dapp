@@ -8,6 +8,7 @@ import {
   useWallet,
 } from '@solana/wallet-adapter-react';
 import {signin} from "../../services/auth";
+import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
 const ConnecteBtnState = () => {
   const {disconnect} = useWallet();
@@ -32,7 +33,6 @@ const ConnectBtn = () => {
     publicKey,
     signMessage,
     connecting,
-    disconnecting,
     connected,
   } = useWallet();
   const {connection} = useConnection();
@@ -99,7 +99,9 @@ const ConnectBtn = () => {
         <ConnecteBtnState />
       )
       : (
-        <button className="btn btn-accent">Connect</button>
+        <WalletMultiButton>
+          {connecting ? 'CONNECTING' : 'CONNECT WALLET'}
+        </WalletMultiButton>
       )
   );
 }
