@@ -10,7 +10,14 @@ import {
 import {signin} from "../../services/auth";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
-const ConnecteBtnState = () => {
+const getUiAddress = (address) => {
+  const head = address.slice(0, 4);
+  const tail = address.slice(-4);
+
+  return `${head}..${tail}`
+}
+
+const ConnecteBtnState = ({address}) => {
   const {disconnect} = useWallet();
 
   const handleDisconnect = useCallback(async () => {
@@ -20,9 +27,9 @@ const ConnecteBtnState = () => {
 
   return (
     <div className="dropdown">
-      <div tabIndex={0} role="button" className="btn m-1" onClick={handleDisconnect}>Disconnect</div>
+      <div tabIndex={0} role="button" className="btn btn-outline m-1">{address && getUiAddress(address)}</div>
       <ul tabIndex={0} className="dropdown-content menu btn-primary z-[1] w-52 p-2 shadow">
-        <li><a>Disconnect</a></li>
+        <li onClick={handleDisconnect}><a>Disconnect</a></li>
       </ul>
     </div>
   )
@@ -96,7 +103,7 @@ const ConnectBtn = () => {
   return (
     connected
       ? (
-        <ConnecteBtnState />
+        <ConnecteBtnState address={address}/>
       )
       : (
         <WalletMultiButton>
