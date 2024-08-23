@@ -11,8 +11,6 @@ const socketEndpoint = import.meta.env.VITE_WS;
 const SocketContext = createContext(undefined);
 
 export const SocketProvider = ({children}) => {
-  const [token, setToken] = useState(null);
-  const [withheldAuthority, setWithheldAuthority] = useState(null);
   const [newCollectTx, setNewCollectTx] = useState(null);
   const [socket, setSocket] = useState();
 
@@ -30,11 +28,6 @@ export const SocketProvider = ({children}) => {
 
     newSocket.on("connect", () => {
       console.log("Connected to socket server");
-      if (token && withheldAuthority) {
-        console.log("Emitting collect for token and withheldAuthority:", token, withheldAuthority);
-        newSocket.emit("collect", tokenId, withheldAuthority);
-        newSocket.on(withheldAuthority, handleNewCollectTx);
-      }
     });
 
     newSocket.on("disconnect", (reason) => {
@@ -43,12 +36,6 @@ export const SocketProvider = ({children}) => {
 
     newSocket.on("reconnect", () => {
       console.log("Reconnected to socket server");
-
-      if (tokenId) {
-        console.log("Re-emitting collect for token and withheldAuthority:", token, withheldAuthority);
-        newSocket.emit("collect", tokenId);
-        newSocket.on(withheldAuthority, handleNewCollectTx);
-      }
     });
 
     setSocket(newSocket);
@@ -58,26 +45,28 @@ export const SocketProvider = ({children}) => {
       newSocket.disconnect();
       console.log("Cleanup");
     };
-  }, [token, withheldAuthority, handleNewCollectTx]);
+  }, [handleNewCollectTx]);
 
   useEffect(() => {
     const cleanup = setupSocket();
     return cleanup;
   }, [setupSocket]);
 
-  const updateToken = useCallback((t) => {
-    setToken(t);
-  }, []);
-
-  const updateWithheldAuthority = useCallback((authority) => {
-    setWithheldAuthority(authority);
-  }, []);
+  const collect = useCallback(
+    (token, withheldAuthority) => {
+      if (token && withheldAuthority) {
+        console.log("Emitting collect for token and withheldAuthority:", token, withheldAuthority);
+        newSocket.emit("collect", token, withheldAuthority);
+        newSocket.on(withheldAuthority, handleNewCollectTx);
+      }
+    },
+    [],
+  );
 
   return (
     <SocketContext.Provider
       value={{
-        updateToken,
-        updateWithheldAuthority,
+        collect,
         socket,
         newCollectTx,
       }}
