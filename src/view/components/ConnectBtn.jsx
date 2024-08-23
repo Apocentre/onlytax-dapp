@@ -3,10 +3,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import {
-  useConnection,
-  useWallet,
-} from '@solana/wallet-adapter-react';
+import {useWallet} from '@solana/wallet-adapter-react';
 import {signin} from "../../services/auth";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
@@ -42,7 +39,6 @@ const ConnectBtn = () => {
     connecting,
     connected,
   } = useWallet();
-  const {connection} = useConnection();
   const [address, setAddress] = useState(null);
   const [signMessageError, setSignMessageError] = useState(false);
 
@@ -77,10 +73,7 @@ const ConnectBtn = () => {
         return;
       }
 
-      try {
-        const address = publicKey.toBase58();
-        setAddress(address);
-        
+      try {        
         const now = Date.now();
         const message = new TextEncoder().encode(
           generateSignatureMessage(now)
@@ -96,9 +89,12 @@ const ConnectBtn = () => {
 
   useEffect(() => {
     if (publicKey) {
+      const address = publicKey.toBase58();
+      setAddress(address);
+
       signAndSend();
     }
-  }, [publicKey, signAndSend]);
+  }, [publicKey]);
 
   return (
     connected

@@ -13,6 +13,7 @@ const SocketContext = createContext(undefined);
 export const SocketProvider = ({children}) => {
   const [newCollectTx, setNewCollectTx] = useState(null);
   const [socket, setSocket] = useState();
+  const [handleDisconnect, setHandlerDisconnect] = useState();
 
   const handleNewCollectTx = useCallback((msg) => {
     console.log("New Collect Transaction received", msg);
@@ -32,6 +33,7 @@ export const SocketProvider = ({children}) => {
 
     newSocket.on("disconnect", (reason) => {
       console.log("Disconnected from socket server", reason);
+      handleDisconnect && handleDisconnect(reason);
     });
 
     newSocket.on("reconnect", () => {
@@ -43,7 +45,6 @@ export const SocketProvider = ({children}) => {
     return () => {
       newSocket.off("collect", handleNewCollectTx);
       newSocket.disconnect();
-      console.log("Cleanup");
     };
   }, [handleNewCollectTx]);
 
@@ -56,17 +57,23 @@ export const SocketProvider = ({children}) => {
     (token, withheldAuthority) => {
       if (token && withheldAuthority) {
         console.log("Emitting collect for token and withheldAuthority:", token, withheldAuthority);
-        newSocket.emit("collect", token, withheldAuthority);
-        newSocket.on(withheldAuthority, handleNewCollectTx);
+        socket.emit("collect", token, withheldAuthority);
+        socket.on(withheldAuthority, handleNewCollectTx);
       }
     },
-    [],
+    [socket],
   );
+
+  const updateHandleDisconnect = useCallback((onDisconnect) => {
+    setHandlerDisconnect(onDisconnect)
+  }, []);
+
 
   return (
     <SocketContext.Provider
       value={{
         collect,
+        updateHandleDisconnect,
         socket,
         newCollectTx,
       }}
