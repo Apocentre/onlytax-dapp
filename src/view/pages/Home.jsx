@@ -1,8 +1,14 @@
-import { useState } from "react"
+import {useState} from "react"
+import {useSocket} from "../../context/socketContext"
 import "./Home.css"
 
 function Home() {
   const [count, setCount] = useState(0)
+  const {updateToken} = useSocket();
+
+  const handleCollect = (e) => {
+    console.log("Event ", e)
+  }
 
   return (
     <div className="sm:h-3/6">
@@ -16,7 +22,10 @@ function Home() {
             className="input input-bordered md:w-2/6 w-5/6" />
           </div>
           <div>
-          <button className="btn btn-primary md:w-2/6 w-5/6 text-secondary-content">
+          <button
+            className="btn btn-primary md:w-2/6 w-5/6 text-secondary-content"
+            onClick={handleCollect}
+          >
           {
             true 
             ? <span>Collect</span>

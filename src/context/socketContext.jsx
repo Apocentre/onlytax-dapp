@@ -4,17 +4,16 @@ import React, {
   useEffect,
   useState,
   useCallback,
-  useSyncExternalStore,
 } from "react";
 import { Socket, io } from "socket.io-client";
 
 const socketEndpoint = import.meta.env.VITE_WS;
 const SocketContext = createContext(undefined);
 
-export const SocketProvider= ({children}) => {
+export const SocketProvider = ({children}) => {
   const [token, setToken] = useState(null);
   const [withheldAuthority, setWithheldAuthority] = useState(null);
-  const [newCollectTx, setNewCollectTx] = useSyncExternalStore(null);
+  const [newCollectTx, setNewCollectTx] = useState(null);
   const [socket, setSocket] = useState();
 
   const handleNewCollectTx = useCallback((msg) => {
@@ -55,7 +54,7 @@ export const SocketProvider= ({children}) => {
     setSocket(newSocket);
 
     return () => {
-      newSocket.off("collect", handleNewToken);
+      newSocket.off("collect", handleNewCollectTx);
       newSocket.disconnect();
       console.log("Cleanup");
     };
@@ -90,8 +89,10 @@ export const SocketProvider= ({children}) => {
 
 export const useSocket = () => {
   const context = useContext(SocketContext);
+
   if (context === undefined) {
     throw new Error("useSocket must be used within a SocketProvider");
   }
+
   return context;
 };
