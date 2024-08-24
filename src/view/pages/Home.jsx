@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useState} from "react";
 import {VersionedTransaction} from "@solana/web3.js";
+import {concatMap, firstValueFrom} from "rxjs";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
 import "./Home.css"
@@ -8,13 +9,12 @@ function Home() {
   const {publicKey, signTransaction} = useWallet();
   const [token, setToken] = useState("9NxTF8W3gB1y49LBn1GTp5QqPmkdp4P8HJDiqJgJQSUB");
   const [socket, setSocket] = useState(null);
+  const [txStream, setTxStream] = useState(null);
   const [collecting, setCollecting] = useState(false);
-  const [streamEnded, setStreamEnded] = useState(true);
   const [progress, setProgress] = useState({
     totalCount: 0,
     processed: 0,
   });
-  const [transactions, setTransactions] = useState([]);
   const {connection} = useConnection();
 
   useEffect(() => {
@@ -28,65 +28,61 @@ function Home() {
     }
   }, []);
 
-  // sign and send transactions
   useEffect(() => {
-    const run = async () => {
-      console.log("transaction: ", transactions.length)
-      const {data} = transactions.shift();
+    let subscription;
 
-      console.log("Processing tx:", data);
-      console.log("Progress:", progress);
+    if(txStream) {
+      subscription = txStream.pipe(
+        concatMap(tx => {
+          progress.totalCount += 1;
+          setProgress(() => progress);
 
-      const tx = VersionedTransaction.deserialize(data);
-      let {blockhash} = await connection.getLatestBlockhash("confirmed");
-      tx.message.recentBlockhash = blockhash;
-      const signedTX = await signTransaction(tx);
+          return new Promise(async (resolve, reject) => {
+            try {
+              const versionedTx = VersionedTransaction.deserialize(tx.data);
+              let {blockhash} = await connection.getLatestBlockhash("confirmed");
+              versionedTx.message.recentBlockhash = blockhash;
+              
+              const signedTX = await signTransaction(versionedTx);
+              const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
+              resolve(txid);
+            } catch(error) {
+              console.log("Error: ", error);
+              reject(error);
+            }
+          })
+        })
+      );
 
-      const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
-      console.log("Transaction sent", txid);
-      
-      progress.processed += 1;
-      setTransactions(() => transactions);
-      setProgress(() => progress);
-      localStorage.setItem(`${publicKey.toBase58()}::transactions`, transactions);
+
+      subscription.subscribe({
+        next: (txid) => {
+          console.log("Transaction sent", txid);  
+          progress.processed += 1;
+          setProgress(() => progress);
+        },
+        complete: () => {
+          console.log("Tx stream completed")
+          setCollecting(() => false);
+        },
+      });
     }
 
-    if(streamEnded && transactions.length === 0) {
-      setStreamEnded(() => false);
-      setCollecting(() => false);
+    () => {
+      subscription && subscription.unsubscribe()
     }
-
-    if(connection && transactions.length > 0) {
-      run()
-      .catch(error => console.log("error processing transactions: ", error))
-    }
-  }, [transactions])
-
-  const handleNewCollectTx = useCallback((newCollectTx) => {
-    if(!newCollectTx.data) {
-      console.log("Received all transactions")
-      setStreamEnded(() => true);
-      return
-    }
-
-    setTransactions((txs) => [...txs, newCollectTx]);
-    localStorage.setItem(`${publicKey.toBase58()}::transactions`, transactions);
-    progress.totalCount += 1;
-    setProgress(progress);
-  }, [publicKey, token, socket])
+  }, [txStream])
 
   const handleCollect = useCallback(
     () => {
-      if(publicKey && socket && token) {
+      if(connection && publicKey && socket && token) {
         setCollecting(() => true);
-        setStreamEnded(() => false);
         const address = publicKey.toBase58();
-        const cleanUp = streamCollectTransactions(socket, token, address, handleNewCollectTx);
-
-        return () => cleanUp()
+        const stream = streamCollectTransactions(socket, token, address);
+        setTxStream(stream);
       }
     },
-    [publicKey, token, socket]
+    [connection, publicKey, token, socket]
   );
 
   const onTokenChange = (e) => {
@@ -95,7 +91,7 @@ function Home() {
 
   const getProgressPerc = useCallback(() => {
     return progress.totalCount > 0 ? (progress.processed / progress.totalCount) * 100 : 0
-  }, [progress, transactions]);
+  }, [progress]);
 
   return (
     <div className="sm:h-3/6">

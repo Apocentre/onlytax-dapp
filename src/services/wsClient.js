@@ -1,4 +1,5 @@
 import {io} from "socket.io-client";
+import {Observable} from 'rxjs';
 
 const socketEndpoint = import.meta.env.VITE_WS;
 
@@ -25,11 +26,25 @@ export const connectToWs = (onConnect, onDisconnect) => {
   });
 }
 
-export const streamCollectTransactions = (socket, token, withheldAuthority, handleNewCollectTx) => {
+export const streamCollectTransactions = (
+  socket,
+  token,
+  withheldAuthority,
+) => {
   if (token && withheldAuthority) {
     console.log("Emitting collect for token and withheldAuthority:", token, withheldAuthority);
-    socket.emit("collect", token, withheldAuthority);
-    socket.on(withheldAuthority, handleNewCollectTx);
+
+    return new Observable((subscriber) => {
+      socket.emit("collect", token, withheldAuthority);
+      socket.on(withheldAuthority, (tx) => {
+        if(!tx.data) {
+          subscriber.complete();
+          return;
+        }
+
+        subscriber.next(tx);
+      });
+    });
   }
 
   return () => {
