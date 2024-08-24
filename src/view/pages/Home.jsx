@@ -3,6 +3,7 @@ import {VersionedTransaction} from "@solana/web3.js";
 import {concatMap} from "rxjs";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
+import AdvancedModal from "../components/AddvancedModal";
 import "./Home.css"
 
 function Home() {
@@ -12,6 +13,7 @@ function Home() {
   const [collecting, setCollecting] = useState(false);
   const [txCount, setTxCount] = useState(0);
   const [processed, setProcessed] = useState(0);
+  const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const {connection} = useConnection();
 
   useEffect(() => {
@@ -98,6 +100,10 @@ function Home() {
 
   return (
     <div className="sm:h-3/6">
+      <AdvancedModal
+        isOpen={advancedModalOpen}
+        handleClose={() => setAdvancedModalOpen(false)}
+      />
       <div className="flex flex-col gap-4 card h-50">
         <div className="flex flex-col gap-1 items-center">
           <input
@@ -108,7 +114,15 @@ function Home() {
             onChange={onTokenChange}
             value={token}
           />
-          <div className="md:w-2/6 w-5/6 text-left text-xs font-medium pl-1 underline cursor-pointer">Advanced</div>
+          <div
+            className="md:w-2/6 w-5/6 text-left text-xs font-medium pl-1 underline cursor-pointer"
+            onClick={() => {
+              document.getElementById("advanced_modal").showModal();
+              setAdvancedModalOpen(true);
+            }}
+          >
+            Advanced
+          </div>
         </div>
         <div>
           <button
