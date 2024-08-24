@@ -3,7 +3,7 @@ import {VersionedTransaction} from "@solana/web3.js";
 import {concatMap} from "rxjs";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
-import AdvancedModal from "../components/AddvancedModal";
+import AdvancedModal from "../components/AdvancedModal";
 import "./Home.css"
 
 function Home() {
