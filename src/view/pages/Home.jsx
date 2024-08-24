@@ -5,12 +5,6 @@ import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
 import "./Home.css"
 
-//create your forceUpdate hook
-function useForceUpdate(){
-  const [_, setValue] = useState(0); // integer state
-  return () => setValue(value => value + 1); // update state to force render
-}
-
 function Home() {
   const {publicKey, signTransaction} = useWallet();
   const [token, setToken] = useState("9NxTF8W3gB1y49LBn1GTp5QqPmkdp4P8HJDiqJgJQSUB");
@@ -19,7 +13,6 @@ function Home() {
   const [txCount, setTxCount] = useState(0);
   const [processed, setProcessed] = useState(0);
   const {connection} = useConnection();
-  const forceUpdate = useForceUpdate();
 
   useEffect(() => {
     const socket = connectToWs(
@@ -106,9 +99,7 @@ function Home() {
   return (
     <div className="sm:h-3/6">
       <div className="flex flex-col gap-4 card h-50">
-        <div>
-        </div>
-        <div>
+        <div className="flex flex-col gap-1 items-center">
           <input
             disabled={collecting}
             type="text"
@@ -117,6 +108,7 @@ function Home() {
             onChange={onTokenChange}
             value={token}
           />
+          <div className="md:w-2/6 w-5/6 text-left text-xs font-medium pl-1 underline cursor-pointer">Advanced</div>
         </div>
         <div>
           <button
@@ -131,7 +123,6 @@ function Home() {
             }
           </button>
         </div>
-        {/* <div>Collecting...</div> */}
         {
           collecting
           ? (
