@@ -1,20 +1,23 @@
 import {useCallback, useEffect, useState} from "react";
-import {VersionedTransaction} from "@solana/web3.js";
+import {VersionedTransaction, Message} from "@solana/web3.js";
 import {concatMap} from "rxjs";
+import bs58 from "bs58";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
+import {setComputeUnitPrice} from "../../services/web3";
 import AdvancedModal from "../components/AdvancedModal";
 import "./Home.css"
 
 function Home() {
   const {publicKey, signTransaction} = useWallet();
-  const [token, setToken] = useState("9NxTF8W3gB1y49LBn1GTp5QqPmkdp4P8HJDiqJgJQSUB");
+  const [token, setToken] = useState("HAaXGq8cCPjM29KPcJZDV5Hg6o7WXa96RKuZ2hZPuW86");
   const [socket, setSocket] = useState(null);
   const [collecting, setCollecting] = useState(false);
   const [txCount, setTxCount] = useState(0);
   const [processed, setProcessed] = useState(0);
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [userPriorityFee, setUserPriorityFee] = useState();
+  const [authorityKey, setAuthorityKey] = useState();
   const {connection} = useConnection();
 
   useEffect(() => {
@@ -34,7 +37,7 @@ function Home() {
     setProcessed(0);
   }
 
-  const handleCollect = useCallback((txStream) => {
+  const handleCollect = (txStream) => {
     let subscription;
 
     if(txStream) {
@@ -47,6 +50,19 @@ function Home() {
               const versionedTx = VersionedTransaction.deserialize(msg.tx);
               let {blockhash} = await connection.getLatestBlockhash("confirmed");
               versionedTx.message.recentBlockhash = blockhash;
+
+              if(userPriorityFee) {
+                // a super dirty trick to transform the `TransactionInstruction` returned from setComputeUnitPrice
+                // into a CompileInstruction which is needed but the message.instructions
+                const tmpMessage = Message.compile({
+                  instructions: [setComputeUnitPrice(userPriorityFee)],
+                  payerKey: publicKey,
+                });
+
+                // replace the existing priorityFee ix data with the new ones
+                versionedTx.message.instructions[0].data = tmpMessage.instructions[0].data;
+                versionedTx.message.compiledInstructions[0].data = bs58.decode(tmpMessage.instructions[0].data);
+              }
               
               const signedTX = await signTransaction(versionedTx);
               const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
@@ -75,19 +91,16 @@ function Home() {
         },
       });
     }
-  }, [connection, signTransaction])
+  }
 
-  const startCollecting = useCallback(
-    () => {
-      if(connection && publicKey && socket && token) {
-        setCollecting(true);
-        const address = publicKey.toBase58();
-        const txStream = streamCollectTransactions(socket, token, address);
-        handleCollect(txStream);
-      }
-    },
-    [connection, publicKey, token, socket]
-  );
+  const startCollecting = () => {
+    if(connection && publicKey && socket && token) {
+      setCollecting(true);
+      const address = publicKey.toBase58();
+      const txStream = streamCollectTransactions(socket, token, address);
+      handleCollect(txStream);
+    }
+  }
 
   const onTokenChange = (e) => {
     setToken(e.target.value)
@@ -104,6 +117,7 @@ function Home() {
       <AdvancedModal
         isOpen={advancedModalOpen}
         setUserPriorityFee={setUserPriorityFee}
+        setAuthorityKey={setAuthorityKey}
         handleClose={() => setAdvancedModalOpen(false)}
       />
       <div className="flex flex-col gap-4 card h-50">
