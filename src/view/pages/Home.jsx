@@ -14,6 +14,7 @@ function Home() {
   const [txCount, setTxCount] = useState(0);
   const [processed, setProcessed] = useState(0);
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
+  const [userPriorityFee, setUserPriorityFee] = useState();
   const {connection} = useConnection();
 
   useEffect(() => {
@@ -102,6 +103,7 @@ function Home() {
     <div className="sm:h-3/6">
       <AdvancedModal
         isOpen={advancedModalOpen}
+        setUserPriorityFee={setUserPriorityFee}
         handleClose={() => setAdvancedModalOpen(false)}
       />
       <div className="flex flex-col gap-4 card h-50">

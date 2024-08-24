@@ -23,7 +23,7 @@ const feesFromSol = (sol, computeBudget=200_000) => {
   return priorityFeeInLamports.times(MICRO_LAMPORTS_PER_LAMPORT).toNumber();
 };
 
-const AdvancedModal = ({isOpen, handleClose}) => {
+const AdvancedModal = ({isOpen, handleClose, setUserPriorityFee}) => {
   const [solFee, setSolFee] = useState();
   const [priorityFee, setPriorityFee] = useState();
 
@@ -44,6 +44,10 @@ const AdvancedModal = ({isOpen, handleClose}) => {
   const handlePriorityFee = (e) => {
     const value = e.target.value;
     setSolFee(value !== '' ? value : 0);
+  };
+
+  const onSubmit = (data) => {
+    setUserPriorityFee(feesFromSol(solFee));
   };
 
   return (
@@ -133,6 +137,11 @@ const AdvancedModal = ({isOpen, handleClose}) => {
             value={solFee}
             onChange={handlePriorityFee}
             className="input input-bordered w-full" />
+        </div>
+        <div className="modal-action">
+          <form method="dialog">
+            <button className="btn" onSubmit={onSubmit}>Save</button>
+          </form>
         </div>
       </div>
     </dialog>
