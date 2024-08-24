@@ -36,13 +36,13 @@ export const streamCollectTransactions = (
 
     return new Observable((subscriber) => {
       socket.emit("collect", token, withheldAuthority);
-      socket.on(withheldAuthority, (tx) => {
-        if(!tx.data) {
+      socket.on(withheldAuthority, (msg) => {
+        if(!msg.tx) {
           subscriber.complete();
           return;
         }
 
-        subscriber.next(tx);
+        subscriber.next(msg);
       });
     });
   }

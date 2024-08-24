@@ -1,21 +1,25 @@
 import {useCallback, useEffect, useState} from "react";
 import {VersionedTransaction} from "@solana/web3.js";
-import {concatMap, firstValueFrom} from "rxjs";
+import {concatMap} from "rxjs";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
 import "./Home.css"
+
+//create your forceUpdate hook
+function useForceUpdate(){
+  const [_, setValue] = useState(0); // integer state
+  return () => setValue(value => value + 1); // update state to force render
+}
 
 function Home() {
   const {publicKey, signTransaction} = useWallet();
   const [token, setToken] = useState("9NxTF8W3gB1y49LBn1GTp5QqPmkdp4P8HJDiqJgJQSUB");
   const [socket, setSocket] = useState(null);
-  const [txStream, setTxStream] = useState(null);
   const [collecting, setCollecting] = useState(false);
-  const [progress, setProgress] = useState({
-    totalCount: 0,
-    processed: 0,
-  });
+  const [txCount, setTxCount] = useState(0);
+  const [processed, setProcessed] = useState(0);
   const {connection} = useConnection();
+  const forceUpdate = useForceUpdate();
 
   useEffect(() => {
     const socket = connectToWs(
@@ -28,18 +32,23 @@ function Home() {
     }
   }, []);
 
-  useEffect(() => {
+  const cleanUp = () => {
+    setCollecting(false);
+    setTxCount(0);
+    setProcessed(0);
+  }
+
+  const handleCollect = useCallback((txStream) => {
     let subscription;
 
     if(txStream) {
-      subscription = txStream.pipe(
-        concatMap(tx => {
-          progress.totalCount += 1;
-          setProgress(() => progress);
+      const observer = txStream.pipe(
+        concatMap(msg => {
+          setTxCount(msg.count);
 
           return new Promise(async (resolve, reject) => {
             try {
-              const versionedTx = VersionedTransaction.deserialize(tx.data);
+              const versionedTx = VersionedTransaction.deserialize(msg.tx);
               let {blockhash} = await connection.getLatestBlockhash("confirmed");
               versionedTx.message.recentBlockhash = blockhash;
               
@@ -47,39 +56,38 @@ function Home() {
               const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
               resolve(txid);
             } catch(error) {
-              console.log("Error: ", error);
               reject(error);
             }
           })
         })
       );
 
-
-      subscription.subscribe({
-        next: (txid) => {
-          console.log("Transaction sent", txid);  
-          progress.processed += 1;
-          setProgress(() => progress);
+      subscription = observer.subscribe({
+        next(txid) {
+          setProcessed((v) => v + 1);
+          console.log(`[${processed}] Transaction sent`, txid);
         },
-        complete: () => {
+        error(err) {
+          console.log("Stream error: ", err);
+          cleanUp();
+          subscription.unsubscribe();
+        },
+        complete() {
           console.log("Tx stream completed")
-          setCollecting(() => false);
+          cleanUp();
+          subscription.unsubscribe();
         },
       });
     }
+  }, [connection, signTransaction])
 
-    () => {
-      subscription && subscription.unsubscribe()
-    }
-  }, [txStream])
-
-  const handleCollect = useCallback(
+  const startCollecting = useCallback(
     () => {
       if(connection && publicKey && socket && token) {
-        setCollecting(() => true);
+        setCollecting(true);
         const address = publicKey.toBase58();
-        const stream = streamCollectTransactions(socket, token, address);
-        setTxStream(stream);
+        const txStream = streamCollectTransactions(socket, token, address);
+        handleCollect(txStream);
       }
     },
     [connection, publicKey, token, socket]
@@ -90,8 +98,10 @@ function Home() {
   }
 
   const getProgressPerc = useCallback(() => {
-    return progress.totalCount > 0 ? (progress.processed / progress.totalCount) * 100 : 0
-  }, [progress]);
+    const value = txCount > 0 ? (processed / txCount) * 100 : 0;
+
+    return value.toFixed(0);
+  }, [txCount, processed]);
 
   return (
     <div className="sm:h-3/6">
@@ -112,7 +122,7 @@ function Home() {
           <button
             disabled={collecting}
             className="btn btn-primary md:w-2/6 w-5/6 text-secondary-content"
-            onClick={handleCollect}
+            onClick={startCollecting}
           >
             {
               collecting 
