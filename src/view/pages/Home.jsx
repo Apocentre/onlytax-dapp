@@ -1,41 +1,37 @@
 import {useCallback, useEffect, useState} from "react";
 import {VersionedTransaction} from "@solana/web3.js";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
-import {useSocket} from "../../context/socketContext"
+import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
 import "./Home.css"
 
 function Home() {
   const {publicKey, signTransaction} = useWallet();
-  const [token, setToken] = useState("");
-  const [streamCompleted, setStreamCompleted] = useState(false);
+  const [token, setToken] = useState("9NxTF8W3gB1y49LBn1GTp5QqPmkdp4P8HJDiqJgJQSUB");
+  const [socket, setSocket] = useState(null);
   const [collecting, setCollecting] = useState(false);
+  const [streamEnded, setStreamEnded] = useState(true);
   const [progress, setProgress] = useState({
     totalCount: 0,
     processed: 0,
   });
   const [transactions, setTransactions] = useState([]);
-  const {newCollectTx, collect, updateHandleDisconnect} = useSocket();
   const {connection} = useConnection();
 
   useEffect(() => {
-    if(newCollectTx) {
-      if(!newCollectTx.data) {
-        console.log("Received all transactions")
-        setStreamCompleted(true);
-        return
-      }
+    const socket = connectToWs(
+      (s) => setSocket(s),
+      () => setSocket(null),
+    );
 
-      setTransactions([...transactions, newCollectTx]);
-      localStorage.setItem(`${publicKey.toBase58()}::transactions`, transactions);
-      progress.totalCount += 1;
-      setProgress(progress);
+    () => {
+      socket.disconnect();
     }
-  }, [newCollectTx])
+  }, []);
 
   // sign and send transactions
   useEffect(() => {
     const run = async () => {
-      console.log("transaction: ", transactions)
+      console.log("transaction: ", transactions.length)
       const {data} = transactions.shift();
 
       console.log("Processing tx:", data);
@@ -48,36 +44,50 @@ function Home() {
 
       const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
       console.log("Transaction sent", txid);
-
+      
       progress.processed += 1;
-      setProgress(progress);
-      setTransactions(transactions);
+      setTransactions(() => transactions);
+      setProgress(() => progress);
       localStorage.setItem(`${publicKey.toBase58()}::transactions`, transactions);
     }
 
-    if(connection && streamCompleted && transactions.length > 0) {
+    if(streamEnded && transactions.length === 0) {
+      setStreamEnded(() => false);
+      setCollecting(() => false);
+    }
+
+    if(connection && transactions.length > 0) {
       run()
       .catch(error => console.log("error processing transactions: ", error))
     }
   }, [transactions])
 
-  const handleSocketDisconnect = () => (reason) => {
-    console.log("Disconnected: ", reason)
-  }
+  const handleNewCollectTx = useCallback((newCollectTx) => {
+    if(!newCollectTx.data) {
+      console.log("Received all transactions")
+      setStreamEnded(() => true);
+      return
+    }
+
+    setTransactions((txs) => [...txs, newCollectTx]);
+    localStorage.setItem(`${publicKey.toBase58()}::transactions`, transactions);
+    progress.totalCount += 1;
+    setProgress(progress);
+  }, [publicKey, token, socket])
 
   const handleCollect = useCallback(
-    async () => {
-      setStreamCompleted(true);
-      setCollecting(true);
-      const address = publicKey.toBase58();
-      collect(token, address);
-    },
-    [publicKey, token]
-  );
+    () => {
+      if(publicKey && socket && token) {
+        setCollecting(() => true);
+        setStreamEnded(() => false);
+        const address = publicKey.toBase58();
+        const cleanUp = streamCollectTransactions(socket, token, address, handleNewCollectTx);
 
-  useEffect(() => {
-    updateHandleDisconnect(handleSocketDisconnect);
-  }, [])
+        return () => cleanUp()
+      }
+    },
+    [publicKey, token, socket]
+  );
 
   const onTokenChange = (e) => {
     setToken(e.target.value)
