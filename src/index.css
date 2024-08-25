@@ -3,11 +3,9 @@
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Marlin Soft SQ", Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
 
   font-synthesis: none;
@@ -16,7 +14,13 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root [data-theme] {
+  background: #c9c9ca;
+  background-image: url(./assets/images/noise-light.png);
+}
+
 body {
   margin: 0;
   place-items: center;
+
 }

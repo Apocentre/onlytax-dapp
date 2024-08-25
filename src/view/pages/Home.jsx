@@ -171,7 +171,7 @@ function Home() {
         <div>
           <button
             disabled={collecting}
-            className="btn btn-primary md:w-2/6 w-5/6 text-secondary-content"
+            className="btn btn-neutral md:w-2/6 w-5/6 text-base-200"
             onClick={startCollecting}
           >
             {

@@ -3,7 +3,7 @@ import Header from "../components/Header";
 
 const Layout = (props) => {
   return (
-    <div className="bg-base-100 h-screen flex flex-col w-screen">
+    <div className="h-screen flex flex-col w-screen">
       <div id="header">
         <Header />
       </div>
