@@ -10,7 +10,7 @@ import "./Home.css"
 
 function Home() {
   const {publicKey, signTransaction} = useWallet();
-  const [token, setToken] = useState("HAaXGq8cCPjM29KPcJZDV5Hg6o7WXa96RKuZ2hZPuW86");
+  const [token, setToken] = useState("Ex7QKTHsGHMkVtYg8tgi48Wyw1XrH8hM4dp6B8SGenVz");
   const [socket, setSocket] = useState(null);
   const [collecting, setCollecting] = useState(false);
   const [txCount, setTxCount] = useState(0);
