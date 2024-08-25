@@ -36,7 +36,8 @@ export const streamCollectTransactions = (
 
     return new Observable((subscriber) => {
       socket.emit("collect", token, withheldAuthority);
-      socket.on(withheldAuthority, (msg) => {
+
+      socket.on(`${token}-${withheldAuthority}`, (msg) => {
         if(!msg.tx) {
           subscriber.complete();
           return;

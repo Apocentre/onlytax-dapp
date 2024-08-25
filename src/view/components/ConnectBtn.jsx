@@ -5,6 +5,7 @@ import React, {
 } from 'react';
 import {useWallet} from '@solana/wallet-adapter-react';
 import {signin} from "../../services/auth";
+import {readJwt} from "../../services/jwt";
 import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";
 
 const getUiAddress = (address) => {
@@ -57,8 +58,7 @@ const ConnectBtn = () => {
 
         const hexSig = Buffer.from(sig).toString('hex');
         const authHeader = `${timestamp}:${address}:${hexSig}`;
-        const {jwt} = await signin(authHeader);
-        localStorage.setItem("ONLYTAX::JWT", jwt);
+        await signin(authHeader);
       } catch(error) {
         console.error('Error in signAndSend:', error);
         setSignMessageError(true);
@@ -69,7 +69,7 @@ const ConnectBtn = () => {
 
   const signAndSend = useCallback(
     async () => {
-      if (!publicKey || localStorage.getItem("ONLYTAX::JWT")) {
+      if (!publicKey || readJwt()) {
         return;
       }
 

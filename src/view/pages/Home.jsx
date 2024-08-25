@@ -3,6 +3,7 @@ import {VersionedTransaction, Message, Keypair} from "@solana/web3.js";
 import {concatMap} from "rxjs";
 import bs58 from "bs58";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
+import {readJwt} from "../../services/jwt";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
 import {setComputeUnitPrice} from "../../services/web3";
 import AdvancedModal from "../components/AdvancedModal";
@@ -43,7 +44,7 @@ function Home() {
     if(txStream) {
       const observer = txStream.pipe(
         concatMap(msg => {
-          setTxCount(msg.count);
+          setTxCount(msg.batch_count);
 
           return new Promise(async (resolve, reject) => {
             try {
@@ -68,13 +69,30 @@ function Home() {
                 // sign using the wallet extention
                 const signedTX = await signTransaction(versionedTx);
                 const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
+
+                socket.emit("save-collect-tx", {
+                  access_token: readJwt(),
+                  withdraw_withheld_authority: publicKey.toBase58(),
+                  token,
+                  batch_size: msg.batch_size,
+                  tx_signature: txid,
+                });
+
                 resolve(txid);
               } else {
                 // sign using the user provided private key
                 const wallet = Keypair.fromSecretKey(Buffer.from(bs58.decode(authorityKey)));
-                console.log(">>>>>>>>>>>>>>>>>>>", wallet.publicKey);
                 versionedTx.sign([wallet]);
                 const txid = await connection.sendTransaction(versionedTx, {maxRetries: 10, skipPreflight: false});
+
+                socket.emit("save-collect-tx", {
+                  access_token: readJwt(),
+                  withdraw_withheld_authority: wallet.publicKey.toBase58(),
+                  token,
+                  batch_size: msg.batch_size,
+                  tx_signature: txid,
+                });
+
                 resolve(txid);
               }
             } catch(error) {

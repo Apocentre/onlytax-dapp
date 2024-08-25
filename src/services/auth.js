@@ -12,7 +12,7 @@ export const signin = async (authHeader)=> {
       }
     );
 
-    return data;
+    storeJwt(data.jwt);
   } catch (error) {
     throw new Error(`Sign-in error: ${error}`);
   }

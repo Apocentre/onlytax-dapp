@@ -1,3 +1,5 @@
+import {readJwt} from "./jwt.js";
+
 export class HttpError extends Error {
   constructor(message, status) {
     super(message)
@@ -25,7 +27,7 @@ export default async (
   }
 
   if(auth) {
-    const jwt = localStorage.getItem("ONLYTAX::JWT")
+    const jwt = readJwt();
     if(!jwt) {
       return HttpError('Please sign-in first')
     }
