@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from "react";
-import {VersionedTransaction, Message} from "@solana/web3.js";
+import {VersionedTransaction, Message, Keypair} from "@solana/web3.js";
 import {concatMap} from "rxjs";
 import bs58 from "bs58";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
@@ -63,10 +63,20 @@ function Home() {
                 versionedTx.message.instructions[0].data = tmpMessage.instructions[0].data;
                 versionedTx.message.compiledInstructions[0].data = bs58.decode(tmpMessage.instructions[0].data);
               }
-              
-              const signedTX = await signTransaction(versionedTx);
-              const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
-              resolve(txid);
+
+              if(!authorityKey) {
+                // sign using the wallet extention
+                const signedTX = await signTransaction(versionedTx);
+                const txid = await connection.sendTransaction(signedTX, {maxRetries: 10, skipPreflight: false});
+                resolve(txid);
+              } else {
+                // sign using the user provided private key
+                const wallet = Keypair.fromSecretKey(Buffer.from(bs58.decode(authorityKey)));
+                console.log(">>>>>>>>>>>>>>>>>>>", wallet.publicKey);
+                versionedTx.sign([wallet]);
+                const txid = await connection.sendTransaction(versionedTx, {maxRetries: 10, skipPreflight: false});
+                resolve(txid);
+              }
             } catch(error) {
               reject(error);
             }

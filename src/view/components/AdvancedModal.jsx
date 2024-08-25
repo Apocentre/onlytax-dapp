@@ -24,7 +24,7 @@ const feesFromSol = (sol, computeBudget=200_000) => {
 };
 
 const AdvancedModal = ({isOpen, handleClose, setUserPriorityFee, setAuthorityKey}) => {
-  const [solFee, setSolFee] = useState();
+  const [solFee, setSolFee] = useState("");
   const [privKey, setPrivKey] = useState("");
 
   useEffect(() => {
