@@ -3,6 +3,8 @@ import {VersionedTransaction, Message, Keypair} from "@solana/web3.js";
 import {concatMap} from "rxjs";
 import bs58 from "bs58";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
+import {ToastContainer} from "react-tiny-toast";
+import {toast} from "react-tiny-toast";
 import {readJwt} from "../../services/jwt";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
 import {setComputeUnitPrice} from "../../services/web3";
@@ -105,15 +107,39 @@ function Home() {
       subscription = observer.subscribe({
         next(txid) {
           setProcessed((v) => v + 1);
-          console.log(`[${processed}] Transaction sent`, txid);
+          const msg = (
+            <div>
+              Transaction processed &nbsp; &nbsp; &nbsp;
+              <a className="underline cursor-pointer" target="_blank" href={`https://explorer.solana.com/tx/${txid}`}>Explorer Link</a>
+            </div>
+          );
+
+          toast.show(msg, {
+            timeout: 10000,
+            variant: "success",
+            position: "top-center",
+            className: "card w-96 shadow-xl text-base-200"
+          });
         },
         error(err) {
-          console.log("Stream error: ", err);
+          toast.show(err.message, {
+            timeout: 10000,
+            variant: "danger",
+            position: "top-center",
+            className: "card w-96 shadow-xl text-base-200"
+          });
+
           cleanUp();
           subscription.unsubscribe();
         },
         complete() {
-          console.log("Tx stream completed")
+          toast.show("Collecting completed!", {
+            timeout: 10000,
+            variant: "success",
+            position: "top-center",
+            className: "card w-96 shadow-xl text-base-200"
+          });
+
           cleanUp();
           subscription.unsubscribe();
         },
@@ -142,6 +168,7 @@ function Home() {
 
   return (
     <div className="sm:h-5/6">
+      <ToastContainer />
       <AdvancedModal
         isOpen={advancedModalOpen}
         setUserPriorityFee={setUserPriorityFee}
