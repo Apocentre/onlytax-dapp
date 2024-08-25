@@ -141,7 +141,7 @@ function Home() {
   }, [txCount, processed]);
 
   return (
-    <div className="sm:h-3/6">
+    <div className="sm:h-5/6">
       <AdvancedModal
         isOpen={advancedModalOpen}
         setUserPriorityFee={setUserPriorityFee}
@@ -149,6 +149,11 @@ function Home() {
         handleClose={() => setAdvancedModalOpen(false)}
       />
       <div className="flex flex-col gap-4 card h-50">
+        <div className="flex flex-col gap-1 items-center mb-10">
+          <img
+            className="md:w-2/6 w-5/6"
+            src="/src/assets/images/onlytax_logo.png" />
+        </div>
         <div className="flex flex-col gap-1 items-center">
           <input
             disabled={collecting}
