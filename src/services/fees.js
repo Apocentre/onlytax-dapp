@@ -1,22 +1,18 @@
 import fetch from "./api";
 
+const DEFAULT_PRIORITY_FEE = 10_000;
+
 export const fetchPriorityFees = async ()=> {
   try {
     const data = await fetch(
-      `${import.meta.env.VITE_PRIORITY_FEE_RPC}`,
+      `${import.meta.env.VITE_API}/priority-fees`,
       "POST",
-      {
-        body: {
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'qn_estimatePriorityFees',
-          params: {last_n_blocks: 100},
-        }
-      }
+      {},
+      true,
     );
 
-    return data?.result?.per_compute_unit?.high;
+    return data.high;
   } catch (error) {
-    throw new Error(`Sign-in error: ${error}`);
+    return DEFAULT_PRIORITY_FEE;
   }
 };

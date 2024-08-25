@@ -31,7 +31,7 @@ export default async (
     if(!jwt) {
       return HttpError('Please sign-in first')
     }
-    options.headers['Authorization'] = `bearer ${jwt}`
+    options.headers['Authorization'] = `Bearer ${jwt}`
   }
 
   if(!fileUpload) {

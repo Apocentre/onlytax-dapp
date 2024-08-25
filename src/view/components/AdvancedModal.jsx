@@ -4,7 +4,6 @@ import {fetchPriorityFees} from "../../services/fees";
 
 const MICRO_LAMPORTS_PER_LAMPORT = 1_000_000;
 const LAMPORTS_PER_SOL = 1_000_000_000;
-const DEFAULT_PRIORITY_FEE = 10_000;
 
 // Find how much SOL will be paid for the Tx based on the priorityFee and the computeBudget
 // `priorityFee` - Priority fee in microlamports. There are 10^6 micro-lamports in one lamport.
