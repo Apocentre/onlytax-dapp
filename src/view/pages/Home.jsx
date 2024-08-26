@@ -85,7 +85,7 @@ function Home() {
                   access_token: readJwt(),
                   withdraw_withheld_authority: publicKey.toBase58(),
                   token,
-                  batch_size: msg.batch_size,
+                  batch_count: msg.batch_count,
                   tx_signature: txid,
                 });
 
@@ -100,7 +100,7 @@ function Home() {
                   access_token: readJwt(),
                   withdraw_withheld_authority: wallet.publicKey.toBase58(),
                   token,
-                  batch_size: msg.batch_size,
+                  batch_count: msg.batch_count,
                   tx_signature: txid,
                 });
 
