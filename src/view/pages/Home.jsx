@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from "react";
-import {VersionedTransaction, Message, Keypair} from "@solana/web3.js";
+import {VersionedTransaction, Message, Keypair, PublicKey} from "@solana/web3.js";
 import {concatMap} from "rxjs";
 import bs58 from "bs58";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
@@ -8,9 +8,11 @@ import logo from "../../assets/images/onlytax_logo.png"
 import {toast} from "react-tiny-toast";
 import {readJwt} from "../../services/jwt";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
-import {setComputeUnitPrice} from "../../services/web3";
+import {setComputeUnitPrice, createAtaIfNeeded} from "../../services/web3";
 import AdvancedModal from "../components/AdvancedModal";
 import "./Home.css"
+
+const ataCreated = {};
 
 function Home() {
   const {publicKey, signTransaction} = useWallet();
@@ -54,6 +56,12 @@ function Home() {
               const versionedTx = VersionedTransaction.deserialize(msg.tx);
               let {blockhash} = await connection.getLatestBlockhash("confirmed");
               versionedTx.message.recentBlockhash = blockhash;
+
+              // check if ata needs to be created only once
+              if(!ataCreated[publicKey.toBase58()]) {
+                await createAtaIfNeeded(connection, signTransaction, new PublicKey(token), publicKey);
+                ataCreated[publicKey.toBase58()] = true;
+              }
 
               if(userPriorityFee) {
                 // a super dirty trick to transform the `TransactionInstruction` returned from setComputeUnitPrice

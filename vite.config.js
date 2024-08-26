@@ -11,6 +11,15 @@ export default defineConfig({
   theme: {
     extend: {},
   },
+  define: {
+    "process.env": process.env,
+    //"process.env.version" : '3.5',
+    "process.browser": true,
+    // // By default, Vite doesn't include shims for NodeJS/
+    // // necessary for segment analytics lib to work
+    //"Buffer": Buffer,
+    global: {},
+  },
   plugins: [
     nodePolyfills(),
     react(),
