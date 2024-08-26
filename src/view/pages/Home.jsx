@@ -4,6 +4,7 @@ import {concatMap} from "rxjs";
 import bs58 from "bs58";
 import {useWallet, useConnection} from "@solana/wallet-adapter-react";
 import {ToastContainer} from "react-tiny-toast";
+import logo from "../../assets/images/onlytax_logo.png"
 import {toast} from "react-tiny-toast";
 import {readJwt} from "../../services/jwt";
 import {connectToWs, streamCollectTransactions} from "../../services/wsClient";
@@ -179,7 +180,7 @@ function Home() {
         <div className="flex flex-col gap-1 items-center mb-10">
           <img
             className="md:w-2/6 w-5/6"
-            src="/src/assets/images/onlytax_logo.png" />
+            src={logo} />
         </div>
         <div className="flex flex-col gap-1 items-center">
           <input
