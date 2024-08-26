@@ -1,15 +1,11 @@
 # FROM nginx AS build
-FROM node:alpine AS build
-
-# Install essential tools
-RUN apk update && \
-    apk add --no-cache git
+FROM node:20 AS build
 
 COPY ./ /tmp/dapp
 
 WORKDIR /tmp/dapp
 RUN npm install
-RUN yarn build
+RUN npm run build
 
 FROM nginx
 
