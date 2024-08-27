@@ -27,6 +27,16 @@ function Home() {
   const {connection} = useConnection();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mint = params.get("mint");
+
+    if(mint) {
+      console.log("Set mint", mint)
+      setToken(() => mint)
+    }
+  }, [])
+
+  useEffect(() => {
     const socket = connectToWs(
       (s) => setSocket(s),
       () => setSocket(null),
