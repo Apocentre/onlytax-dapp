@@ -41,7 +41,7 @@ const ConnectBtn = () => {
     connected,
   } = useWallet();
   const [address, setAddress] = useState(null);
-  const [signMessageError, setSignMessageError] = useState(false);
+  const [setSignMessageError] = useState(false);
 
   const generateSignatureMessage = useCallback((timestamp) => {
     return `Onlytax Auth:${timestamp}`;
@@ -84,7 +84,7 @@ const ConnectBtn = () => {
         console.error('Error in signAndSend:', error);
       }
     },
-    [publicKey, generateSignatureMessage, signAndSendMessage]
+    [publicKey, address, generateSignatureMessage, signAndSendMessage]
   );
 
   useEffect(() => {
