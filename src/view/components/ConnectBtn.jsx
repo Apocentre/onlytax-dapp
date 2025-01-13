@@ -15,8 +15,10 @@ const getUiAddress = (address) => {
   return `${head}..${tail}`
 }
 
-const ConnecteBtnState = ({address}) => {
+const ConnecteBtnState = ({publicKey}) => {
   const {disconnect} = useWallet();
+
+  const address = publicKey.toBase58();
 
   const handleDisconnect = useCallback(async () => {
     localStorage.removeItem('ONLYTAX::JWT');
@@ -40,7 +42,6 @@ const ConnectBtn = () => {
     connecting,
     connected,
   } = useWallet();
-  const [address, setAddress] = useState(null);
   const [setSignMessageError] = useState(false);
 
   const generateSignatureMessage = useCallback((timestamp) => {
@@ -79,27 +80,25 @@ const ConnectBtn = () => {
           generateSignatureMessage(now)
         );
 
+        const address = publicKey.toBase58();
         await signAndSendMessage(message, address, now);
       } catch(error) {
         console.error('Error in signAndSend:', error);
       }
     },
-    [publicKey, address, generateSignatureMessage, signAndSendMessage]
+    [publicKey, generateSignatureMessage, signAndSendMessage]
   );
 
   useEffect(() => {
     if (publicKey) {
-      const address = publicKey.toBase58();
-      setAddress(address);
-
-      signAndSend();
+      signAndSend()
     }
   }, [publicKey]);
 
   return (
     connected
       ? (
-        <ConnecteBtnState address={address}/>
+        <ConnecteBtnState publicKey={publicKey}/>
       )
       : (
         <WalletMultiButton>
